@@ -1,5 +1,6 @@
+def dec_to_bin(num):
+    return bin(num)[2:]
 
-print(1%2)
-print(0%2)
-print(-1%2)
-print(-2%2)
+
+def bin_to_dec(s):
+    return int(s, 2)
