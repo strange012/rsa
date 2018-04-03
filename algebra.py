@@ -8,14 +8,26 @@ def myprint(mylist):
 
 
 class bigint:
+    neg = False
     num = []
 
     def __init__(self, num):
         self.num = list(num)
         self.num.reverse()
+        self.neg *= not self.is_zero()
 
     def get_reversed(self):
         return bigint(self.num)
+
+    def __neg__(self):
+        a = copy.deepcopy(self)
+        a.neg = not a.neg
+        return a
+
+    def __pos__(self):
+        a = copy.deepcopy(self)
+        a.neg = False
+        return a
 
     @classmethod
     def one(cls):
@@ -25,9 +37,14 @@ class bigint:
     def zero(cls):
         return cls([0])
 
+    def is_zero(self):
+        return not (len(self) - 1 + self.num[0])
+
     @classmethod
     def from_str(cls, s):
-        return cls([int(x) for x in s])
+        a = cls([int(x) for x in s if x != "-"])
+        a.neg = True if s[0] == "-" else False
+        return a
 
     @classmethod
     def from_dec(cls, dec):
@@ -37,9 +54,11 @@ class bigint:
         return len(self.num)
 
     def __str__(self):
-        return reduce((lambda x, y: str(y) + x), self.num, "")
+        return str(bin_to_dec(("-" if self.neg else "") + reduce((lambda x, y: str(y) + x), self.num, "")))
 
     def __add__(self, other):
+        if self.neg ^ other.neg:
+            return self - (-other)
         carry = 0
         a = copy.deepcopy(self)
         for i in range(0, max(len(a.num), len(other.num))):
@@ -52,6 +71,7 @@ class bigint:
             a.num[i] = a.num[i] % 2
         if carry:
             a.num.append(carry)
+        a.neg *= not a.is_zero()
         return a
 
     def __mul__(self, other):
@@ -64,25 +84,41 @@ class bigint:
             res[i] = res[i] % 2
         while ((len(res) > 1) and (res[-1] == 0)):
             res.pop()
-        return bigint(res).get_reversed()
+        a = bigint(res).get_reversed()
+        a.neg = (self.neg ^ other.neg) * (not a.is_zero())
+        return a
 
     def __sub__(self, other):
+        if self.neg ^ other.neg:
+            return self + (-other)
         carry = 0
         i = 0
-        a = copy.deepcopy(self)
+        a = copy.deepcopy(max(+self, +other))
+        b = min(+self, +other)
+        a.neg = self < other
         while i in range(0, len(a.num)) or carry:
-            a.num[i] -= (other.num[i] if i < len(other.num) else 0) + carry
+            a.num[i] -= (b.num[i] if i < len(b.num) else 0) + carry
             carry = a.num[i] < 0
             a.num[i] = a.num[i] % 2
             i += 1
         while ((len(a.num) > 1) and (a.num[-1] == 0)):
             a.num.pop()
+        a.neg *= not a.is_zero()
         return a
 
     def __eq__(self, other):
-        return self.num == other.num
+        return self.num == other.num and self.neg == other.neg
+
+    def __ne__(self, other):
+        return not self == other
 
     def __lt__(self, other):
+        if self.neg > other.neg:
+            return True
+        if self.neg < other.neg:
+            return False
+        if self.neg * other.neg:
+            return (+other) < (+self)
         if (len(self) > len(other)):
             return False
         if (len(self) < len(other)):
@@ -104,19 +140,20 @@ class bigint:
     def division(self, other):
         if self < other:
             return bigint([0]), self
+        if self.neg + other.neg != 0:
+            raise TypeError("dividing negative values")
         a = copy.deepcopy(self)
         b = copy.deepcopy(other)
         b << (len(a) - len(b))
         quot = []
 
-        while len(b) >= len(other):
+        while b >= other:
             if a >= b:
                 a -= b
                 quot.append(1)
             else:
                 quot.append(0)
             b >> 1
-
         q = bigint(quot)
         while ((len(q) > 1) and (q.num[-1] == 0)):
             q.num.pop()
@@ -134,11 +171,15 @@ class bigint:
 
     def __rshift__(self, shift):
         if len(self) <= shift:
-            return bigint.zero()
-        self.num = self.num[shift:]
+            self.num = bigint.zero().num
+            self.neg = False
+        else:
+            self.num = self.num[shift:]
         return self
 
     def __pow__(self, other):
+        if self.neg != 0:
+            raise TypeError("dividing negative values")
         exp = copy.deepcopy(other)
         a = copy.deepcopy(self)
         res = bigint([1])
@@ -152,6 +193,8 @@ class bigint:
         return res
 
     def mod_pow(self, exponent, module):
+        if self.neg != 0:
+            raise TypeError("Dividing negative integers.")
         exp = copy.deepcopy(exponent)
         a = copy.deepcopy(self)
         res = bigint([1])
@@ -164,47 +207,55 @@ class bigint:
                 exp >> 1
         return res
 
-
-long1 = "100111110101000010010000001001000010101011100010001100\
-110101100110010001110110011001010100110001100010000000100101100\
-101110010111101110001001001100111000011000111101100000111010101\
-00000011000000010010001100010010101"
-
-long2 = "100001111100001010010110111011010100100000001111100110\
-101011000101111000100001011101111011001101001100010001100101111\
-101011000010111011101111001110000001101101011000111000011000011\
-00100011010010011001011011100001"
-
-p = bigint.from_str(long1)
-q = bigint.from_str(long2)
-
-n = p * q
-
-f = (p - bigint.one()) * (q - bigint.one())
-# print(n)
+    def inverse(self, module):
+        x, y, d = euclidean(self, module)
+        if d != bigint.one():
+            raise TypeError(
+                "Inappropriate method!\nCan't find inverse element of not coprime integers.")
+        return x if x >= bigint.zero() else x + p
 
 
-# print "c = a / b: {}".format(a / b)
+def euclidean(a, b):
+    def rec(a, b):
+        q, r = a.division(b)
+        if r.is_zero():
+            return bigint.one(), bigint.zero(), b
+        x, y, d = rec(b, r)
+        return y - q * x, x, d
+    x, y, d = rec(max(a, b), min(a, b))
+    return (x, y, d) if a < b else (y, x, d)
 
 
-import time
+###########################################################
 
-a = bigint.from_dec(57)
-p = bigint.from_dec(239)
+# x = bigint.from_dec(3)
+# p = bigint.from_dec(31)
 
-exp = p - bigint.one()
-print "a: {}".format(a)
-print "p: {}".format(p)
-print "p-1: {}".format(exp)
+# print "x: {}".format(x)
+# print "p: {}".format(p)
+# a = x.inverse(p)
+# print "a: {}".format(x.inverse(p))
+# print "{}*{} mod {} = {}".format(x, a, p, (x * a) % p)
 
-start = time.time()
-res = a**exp
-print "a**p-1: {}\n{}s".format(res, time.time() - start)
+###########################################################
+# import time
+
+# a = bigint.from_dec(57)
+# p = bigint.from_dec(239)
+
+# exp = p - bigint.one()
+# print "a: {}".format(a)
+# print "p: {}".format(p)
+# print "p-1: {}".format(exp)
+
+# start = time.time()
+# res = a**exp
+# print "a**p-1: {}\n{}s".format(res, time.time() - start)
 
 # start = time.time()
 # t = res / p
 # print "a**exp / p: {}\n{}s".format(t, time.time() - start)
 
-start = time.time()
-t = a.mod_pow(exp, p)
-print "a**p-1 mod p (mod pow): {}\n{}s".format(t,  time.time() - start)
+# start = time.time()
+# t = a.mod_pow(exp, p)
+# print "a**p-1 mod p (mod pow): {}\n{}s".format(t,  time.time() - start)
