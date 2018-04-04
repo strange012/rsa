@@ -44,6 +44,7 @@ keys = generate()
 print keys["log"]
 print "message: {}".format(m)
 c = code(m, keys["public"])
+
 print "coded: {}".format(c)
 res = decode(c, keys['private'])
 print "decoded: {}\ntime: {}".format(res[0], res[1])
