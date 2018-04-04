@@ -147,7 +147,7 @@ class bigint:
         b << (len(a) - len(b))
         quot = []
 
-        while b >= other:
+        while len(b) >= len(other) and (not b.is_zero()):
             if a >= b:
                 a -= b
                 quot.append(1)
@@ -182,7 +182,7 @@ class bigint:
             raise TypeError("dividing negative values")
         exp = copy.deepcopy(other)
         a = copy.deepcopy(self)
-        res = bigint([1])
+        res = bigint.one()
         while exp > bigint.zero():
             if exp.num[0] == 1:
                 res *= a
@@ -192,18 +192,32 @@ class bigint:
                 exp >> 1
         return res
 
+    def mod_mul(self, other, module):
+        res = bigint.zero()
+        for i in range(len(self) - 1, -1, -1):
+            res = res * bigint.from_dec(2)
+            if res >= module:
+                res -= module
+            if self.num[i]:
+                res = res + other
+            if (res >= module):
+                res -= module
+        return res
+
     def mod_pow(self, exponent, module):
         if self.neg != 0:
             raise TypeError("Dividing negative integers.")
         exp = copy.deepcopy(exponent)
         a = copy.deepcopy(self)
-        res = bigint([1])
+        res = bigint.one()
         while exp > bigint.zero():
             if exp.num[0] == 1:
                 res = (res * a) % module
+                # res = res.mod_mul(a, module)
                 exp -= bigint.one()
             else:
                 a = (a * a) % module
+                # a = a.mod_mul(a, module)
                 exp >> 1
         return res
 
@@ -212,7 +226,7 @@ class bigint:
         if d != bigint.one():
             raise TypeError(
                 "Inappropriate method!\nCan't find inverse element of not coprime integers.")
-        return x if x >= bigint.zero() else x + p
+        return x if x >= bigint.zero() else x + module
 
 
 def euclidean(a, b):
