@@ -9,7 +9,3 @@ def fib(n):
             x, y = rec(m - 1)
             return (y, x + y)
     return rec(n)[1]
-
-
-for i in range(1, 100):
-    print(fib(i))
