@@ -94,15 +94,15 @@ def gen_int(n):
 
 
 def gen_prime(n, k):
-    x = bigint.zero()
+    x = gen_int(n)
     while 1:
-        x = gen_int(n)
         if k == 0:
             if test_prime_fermi_fib(x):
                 break
         else:
             if test_prime_fermi(x, k):
                 break
+        x = x + bigint.one()
     return x
 
 
