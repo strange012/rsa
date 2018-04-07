@@ -48,7 +48,7 @@ class bigint:
 
     @classmethod
     def from_str(cls, s):
-        a = cls([int(x) for x in s if x != "-"])
+        a = cls([int(x) for x in s if x in "01"])
         a.neg = True if s[0] == "-" else False
         return a
 
@@ -59,9 +59,11 @@ class bigint:
     def __len__(self):
         return len(self.num)
 
+    def bin_str(self):
+        return str((("-" if self.neg else "") + reduce((lambda x, y: str(y) + x), self.num, "")))
+        
     def __str__(self):
         return str(bin_to_dec(("-" if self.neg else "") + reduce((lambda x, y: str(y) + x), self.num, "")))
-        # return str((("-" if self.neg else "") + reduce((lambda x, y: str(y) + x), self.num, "")))
 
     def __add__(self, other):
         if self.neg ^ other.neg:

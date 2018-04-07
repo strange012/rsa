@@ -1,10 +1,16 @@
 from algebra import bigint, euclidean
-from primes import long_primes, fermi
 from time import time
 
+def fermi(n):
+    return bigint.from_dec(2**(2**n) + 1)
 
 def generate():
-    p, q = long_primes()
+    f = open('primes.txt', 'r')
+    p = bigint.from_str(f.readline())
+    q = bigint.from_str(f.readline())
+    print(p)
+    print(q)
+    f.close()
     n = p * q
     fi = (p - bigint.one()) * (q - bigint.one())
     e = bigint.one()
@@ -37,7 +43,7 @@ def decode(c, key):
     return c.mod_pow(key[0], key[1]), time() - start
 
 
-m = bigint.from_dec(228)
+m = bigint.from_dec(1337)
 
 keys = generate()
 

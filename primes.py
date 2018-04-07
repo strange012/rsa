@@ -1,4 +1,4 @@
-from time import time
+from time import time, sleep
 from conventer import bin_to_dec
 import random
 from algebra import bigint
@@ -27,8 +27,6 @@ def long_primes():
     return bigint.from_dec(p100), bigint.from_dec(q100)
 
 
-def fermi(n):
-    return bigint.from_dec(2**(2**n) + 1)
 
 
 def fib(n):
@@ -85,8 +83,17 @@ def pair_of_primes(n, k):
     a = primes(n)[::k]
     return a[len(a) - 2:]
 
-
 def gen_int(n):
+    s = "1"
+    for _ in range(n - 2):
+        sleep(0.001119)
+        a = "%.18f" % time()
+        a = int(a[len(a) - 18:])
+        s += str((a % 239) % 2)
+    s+="1"
+    return bigint.from_str(s)
+
+def gen_int1(n):
     s = "1"
     for _ in range(n - 1):
         s += str(random.randint(0, 1))
@@ -102,11 +109,25 @@ def gen_prime(n, k):
         else:
             if test_prime_fermi(x, k):
                 break
-        x = x + bigint.one()
+        x = x + bigint.from_dec(2)
     return x
 
 
-for i in range(3, 4):
-    start = time()
-    print "{} : {}".format(i, gen_prime(100, i))
-    print "time : {}".format(time() - start)
+# for i in range(3, 4):
+#     start = time()
+#     print "{} : {}".format(i, gen_prime(100, i))
+#     print "time : {}".format(time() - start)
+
+
+f = open('primes.txt', 'w')
+
+start = time()
+a = gen_prime(100, 3)
+f.write(a.bin_str())
+print "p : {}\ntime : {}".format(a, time() - start)
+f.write('\n')
+start = time()
+a = gen_prime(101, 3)
+f.write(a.bin_str())
+print "q : {}\ntime : {}".format(a, time() - start)
+f.close()
